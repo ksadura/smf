@@ -59,6 +59,7 @@ func (c *SMContext) ApplySessionRules(
 
 func (c *SMContext) AddQosFlow(qfi uint8, qos *models.QosData) {
 	qosFlow := NewQoSFlow(qfi, qos)
+	c.Log.Infof("QFI %d", qfi)
 	if qosFlow != nil {
 		c.AdditonalQosFlows[qfi] = qosFlow
 	}
@@ -81,6 +82,7 @@ func (c *SMContext) ApplyPccRules(
 
 	// Handle QoSData
 	for id, qos := range decision.QosDecs {
+		c.Log.Infof("QFI: %d", id)
 		if qos == nil {
 			// If QoS Data is nil should remove QFI
 			c.RemoveQFI(id)

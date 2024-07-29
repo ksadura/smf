@@ -193,12 +193,13 @@ func NewUserPlaneInformation(upTopology *factory.UserPlaneInformation) *UserPlan
 	for _, link := range upTopology.Links {
 		nodeA := nodePool[link.A]
 		nodeB := nodePool[link.B]
+		logger.CtxLog.Debugf("Link A: %s, Link B: %s", link.A, link.B)
 		if nodeA == nil || nodeB == nil {
-			logger.InitLog.Warningf("One of link edges does not exist. UPLink [%s] <=> [%s] not establish\n", link.A, link.B)
+			logger.InitLog.Debugf("One of link edges does not exist. UPLink [%s] <=> [%s] not establish\n", link.A, link.B)
 			continue
 		}
 		if nodeInLink(nodeB, nodeA.Links) != -1 || nodeInLink(nodeA, nodeB.Links) != -1 {
-			logger.InitLog.Warningf("One of link edges already exist. UPLink [%s] <=> [%s] not establish\n", link.A, link.B)
+			logger.InitLog.Debugf("One of link edges already exist. UPLink [%s] <=> [%s] not establish\n", link.A, link.B)
 			continue
 		}
 		nodeA.Links = append(nodeA.Links, nodeB)
@@ -214,6 +215,10 @@ func NewUserPlaneInformation(upTopology *factory.UserPlaneInformation) *UserPlan
 		UPFsIPtoID:                make(map[string]string),
 		DefaultUserPlanePath:      make(map[string][]*UPNode),
 		DefaultUserPlanePathToUPF: make(map[string]map[string][]*UPNode),
+	}
+
+	for k, v := range upfPool {
+		logger.CtxLog.Debugf("Key: %s Val: %s", k, v.Name)
 	}
 
 	return userplaneInformation
@@ -783,9 +788,13 @@ func (upi *UserPlaneInformation) selectAnchorUPF(source *UPNode, selection *UPFS
 	upList := make([]*UPNode, 0)
 	visited := make(map[*UPNode]bool)
 	queue := make([]*UPNode, 0)
-	selectionForIUPF := &UPFSelectionParams{
-		Dnn:    selection.Dnn,
-		SNssai: selection.SNssai,
+	// selectionForIUPF := &UPFSelectionParams{
+	// 	Dnn:    selection.Dnn,
+	// 	SNssai: selection.SNssai,
+	// }
+
+	for _, nd := range source.Links {
+		logger.CtxLog.Debugf("Itery UPF: %s", nd.Name)
 	}
 
 	queue = append(queue, source)
@@ -796,20 +805,24 @@ func (upi *UserPlaneInformation) selectAnchorUPF(source *UPNode, selection *UPFS
 		visited[node] = true
 		for _, link := range node.Links {
 			if !visited[link] {
-				if link.MatchedSelection(selectionForIUPF) {
-					queue = append(queue, link)
-					findNewNode = true
-					break
+				for _, snssaiInfo := range link.UPF.SNssaiInfos {
+					currentSnssai := snssaiInfo.SNssai
+					if currentSnssai.Equal(selection.SNssai) {
+						for _, dnnInfo := range snssaiInfo.DnnList {
+							if dnnInfo.Dnn == selection.Dnn && dnnInfo.ContainsDNAI(selection.Dnai) {
+								queue = append(queue, link)
+								findNewNode = true
+								break
+							}
+						}
+					}
 				}
 			}
 		}
-		if !findNewNode {
-			// if new node is AN type not need to add upList
-			if node.Type == UPNODE_UPF && node.MatchedSelection(selection) {
-				upList = append(upList, node)
-			}
+		if !findNewNode && node.Type == UPNODE_UPF {
+			logger.CtxLog.Debugf("Node: %s", node.Name)
+			upList = append(upList, node)
 		}
-
 		if len(queue) == 0 {
 			break
 		}
@@ -859,6 +872,7 @@ func (upi *UserPlaneInformation) SelectUPFAndAllocUEIP(selection *UPFSelectionPa
 	}
 	UPFList = upi.sortUPFListByName(UPFList)
 	sortedUPFList := createUPFListForSelection(UPFList)
+	logger.CtxLog.Debugf("%d", len(sortedUPFList))
 	for _, upf := range sortedUPFList {
 		logger.CtxLog.Debugf("check start UPF: %s",
 			upi.GetUPFNameByIp(upf.NodeID.ResolveNodeIdToIp().String()))

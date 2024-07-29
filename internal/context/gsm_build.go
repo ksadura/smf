@@ -90,6 +90,7 @@ func BuildGSMPDUSessionEstablishmentAccept(smContext *SMContext) ([]byte, error)
 	authDescs := nasType.QoSFlowDescs{}
 	dafaultAuthDesc := nasType.QoSFlowDesc{}
 	dafaultAuthDesc.QFI = sessRule.DefQosQFI
+	logger.GsmLog.Infof("QFI gsm %d", sessRule.DefQosQFI)
 	dafaultAuthDesc.OperationCode = nasType.OperationCodeCreateNewQoSFlowDescription
 	parameter := new(nasType.QoSFlow5QI)
 	parameter.FiveQI = uint8(authDefQos.Var5qi)

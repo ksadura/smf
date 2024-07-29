@@ -110,6 +110,7 @@ func HandlePDUSessionSMContextCreate(request models.PostSmContextsRequest) *http
 			}
 		}()
 		if len(sessSubData) > 0 {
+			smContext.Log.Infof("UDM DATA: %+v", sessSubData[0].DnnConfigurations[smContext.Dnn].SessionAmbr)
 			smContext.DnnConfiguration = sessSubData[0].DnnConfigurations[smContext.Dnn]
 			// UP Security info present in session management subscription data
 			if smContext.DnnConfiguration.UpSecurity != nil {

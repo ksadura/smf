@@ -1,6 +1,7 @@
 package context
 
 import (
+	"fmt"
 	"github.com/free5gc/aper"
 	"github.com/free5gc/nas/nasType"
 	"github.com/free5gc/ngap/ngapType"
@@ -28,6 +29,7 @@ func NewQoSFlow(qfi uint8, qosModel *models.QosData) *QoSFlow {
 	if qosModel == nil {
 		return nil
 	}
+	fmt.Printf("fmt QFI: %d", qfi)
 	qos := &QoSFlow{
 		QFI:        qfi,
 		QoSProfile: qosModel,

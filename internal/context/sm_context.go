@@ -619,6 +619,7 @@ func (c *SMContext) CreatePccRuleDataPath(pccRule *PCCRule,
 	pccRule.Datapath = createdDataPath
 	pccRule.AddDataPathForwardingParameters(c, &targetRoute)
 	pccRule.Datapath.AddQoS(c, pccRule.QFI, qosData)
+	c.Log.Infof("QFIs %d", pccRule.QFI)
 	c.AddQosFlow(pccRule.QFI, qosData)
 	return nil
 }
@@ -849,6 +850,7 @@ func (smContextState SMContextState) String() string {
 
 func (smContext *SMContext) AssignQFI(qosId string) uint8 {
 	qfi, ok := smContext.qosDataToQFI[qosId]
+	smContext.Log.Infof("QFI: %d", qfi)
 	if !ok {
 		newId, err := smContext.QFIGenerator.Allocate()
 		if err != nil {
