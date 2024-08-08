@@ -30,7 +30,8 @@ func ToBeAssociatedWithUPF(ctx context.Context, upf *smf_context.UPF) {
 			break
 		}
 
-		if smf_context.GetSelf().PfcpHeartbeatInterval == 0 {
+		if smf_context.GetSelf().PfcpHeartbeatInterval != 0 {
+			fmt.Println("Hearbeat is 0")
 			return
 		}
 

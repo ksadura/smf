@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/antihax/optional"
 	"github.com/mohae/deepcopy"
 
 	"github.com/free5gc/openapi"
@@ -201,7 +200,7 @@ func SendNFDiscoveryServingAMF(smContext *smf_context.SMContext) (*models.Proble
 
 	localVarOptionals := Nnrf_NFDiscovery.SearchNFInstancesParamOpts{}
 
-	localVarOptionals.TargetNfInstanceId = optional.NewInterface(smContext.ServingNfId)
+	//localVarOptionals.TargetNfInstanceId = optional.NewInterface(smContext.ServingNfId)
 
 	// Check data
 	result, httpResp, localErr := smf_context.GetSelf().

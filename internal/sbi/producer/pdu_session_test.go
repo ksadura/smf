@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"testing"
 	"time"
+	"fmt"
 
 	"github.com/stretchr/testify/require"
 	"gopkg.in/h2non/gock.v1"
@@ -567,6 +568,7 @@ func TestHandlePDUSessionSMContextCreate(t *testing.T) {
 
 	// init all stubs for all TCs first to prevent gock race condition
 	for _, tc := range testCases {
+		fmt.Println(string(tc.request.BinaryDataN1SmMessage[:]))
 		for _, initFunc := range tc.initFuncs {
 			initFunc()
 		}

@@ -25,7 +25,7 @@ func SendSMPolicyAssociationCreate(smContext *smf_context.SMContext) (string, *m
 	}
 
 	smPolicyData := models.SmPolicyContextData{}
-
+	fmt.Println(*smContext.SmContextCreateData.ServingNetwork, *smContext.ServingNetwork)
 	smPolicyData.Supi = smContext.Supi
 	smPolicyData.PduSessionId = smContext.PDUSessionID
 	smPolicyData.NotificationUri = fmt.Sprintf("%s://%s:%d/nsmf-callback/sm-policies/%s",
