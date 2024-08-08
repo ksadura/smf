@@ -2,6 +2,7 @@ package context
 
 import (
 	"errors"
+	"math"
 	"math/rand"
 	"net"
 	"reflect"
@@ -43,6 +44,35 @@ type UPNode struct {
 	Dnn    string
 	Links  []*UPNode
 	UPF    *UPF
+}
+
+func GetActiveUPFs() []*UPNode {
+	upi := smfContext.UserPlaneInformation
+	upfs := make([]*UPNode, 0)
+
+	for _, upf := range upi.UPFs {
+		if upf.UPF.UPFStatus == AssociatedSetUpSuccess && upf.UPF.IsActive {
+			upfs = append(upfs, upf)
+		}
+	}
+	return upfs
+}
+
+func GetLeastLoadedUPF() *UPNode {
+	var upf *UPNode
+	minValue := uint64(math.MaxUint64)
+
+	smContextPool.Range(func(key, value any) bool {
+		k := value.(*SMContext).SelectedUPF
+		v := value.(*SMContext).GBR
+
+		if v < minValue {
+			minValue = v
+			upf = k
+		}
+		return true // continue iteration
+	})
+	return upf
 }
 
 func (u *UPNode) MatchedSelection(selection *UPFSelectionParams) bool {
@@ -858,7 +888,7 @@ func (upi *UserPlaneInformation) selectUPPathSource() (*UPNode, error) {
 }
 
 // SelectUPFAndAllocUEIP will return anchor UPF, allocated UE IP and use/not use static IP
-func (upi *UserPlaneInformation) SelectUPFAndAllocUEIP(selection *UPFSelectionParams) (*UPNode, net.IP, bool) {
+func (upi *UserPlaneInformation) SelectUPFAndAllocUEIP(selection *UPFSelectionParams, c *SMContext) (*UPNode, net.IP, bool) {
 	source, err := upi.selectUPPathSource()
 	if err != nil {
 		return nil, nil, false
@@ -871,7 +901,11 @@ func (upi *UserPlaneInformation) SelectUPFAndAllocUEIP(selection *UPFSelectionPa
 		return nil, nil, false
 	}
 	UPFList = upi.sortUPFListByName(UPFList)
-	sortedUPFList := createUPFListForSelection(UPFList)
+	sortedUPFList := createUPFListForSelection(UPFList, c)
+	if len(sortedUPFList) == 0 {
+		logger.CtxLog.Warnf("Can't find UPF with enough amount of available resources")
+		return nil, nil, false
+	}
 	logger.CtxLog.Debugf("%d", len(sortedUPFList))
 	for _, upf := range sortedUPFList {
 		logger.CtxLog.Debugf("check start UPF: %s",
@@ -906,9 +940,28 @@ func (upi *UserPlaneInformation) SelectUPFAndAllocUEIP(selection *UPFSelectionPa
 	return nil, nil, false
 }
 
-func createUPFListForSelection(inputList []*UPNode) (outputList []*UPNode) {
-	offset := rand.Intn(len(inputList))
-	return append(inputList[offset:], inputList[:offset]...)
+func createUPFListForSelection(inputList []*UPNode, c *SMContext) (outputList []*UPNode) {
+	upfs := make(map[*UPNode]uint64)
+	upNodeCap := uint64(512)
+
+	for _, upf := range inputList {
+		upfs[upf] = 0
+	}
+	smContextPool.Range(func(key, value any) bool {
+		upfs[value.(*SMContext).SelectedUPF] += value.(*SMContext).GBR
+		return true
+	})
+
+	for upf, currentLoad := range upfs {
+		logger.CtxLog.Debugf("%s: %d [Mbps]", upf.NodeID.ResolveNodeIdToIp().String(), currentLoad)
+		free := upNodeCap - currentLoad
+		if free >= c.GBR && upf.UPF.IsActive {
+			outputList = append(outputList, upf)
+		}
+	}
+	logger.CtxLog.Debugln("UPF lookup list:", outputList)
+	offset := rand.Intn(len(outputList))
+	return append(outputList[offset:], outputList[:offset]...)
 }
 
 func createPoolListForSelection(inputList []*UeIPPool) (outputList []*UeIPPool) {

@@ -220,6 +220,9 @@ type SMContext struct {
 
 	// lock
 	SMLock sync.Mutex
+
+	// M.E. Thesis
+	GBR uint64
 }
 
 func canonicalName(id string, pduSessID int32) string {
@@ -528,7 +531,7 @@ func (c *SMContext) findPSAandAllocUeIP(param *UPFSelectionParams) error {
 			c.SelectedUPF = upi.UPFs[selectedUPFName]
 		}
 	} else {
-		c.SelectedUPF, c.PDUAddress, c.UseStaticIP = upi.SelectUPFAndAllocUEIP(param)
+		c.SelectedUPF, c.PDUAddress, c.UseStaticIP = upi.SelectUPFAndAllocUEIP(param, c)
 		c.Log.Infof("Allocated PDUAdress[%s]", c.PDUAddress.String())
 	}
 	if c.PDUAddress == nil {

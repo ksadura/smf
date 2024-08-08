@@ -173,6 +173,30 @@ func (a *SmfApp) Start(tlsKeyLogPath string) {
 	if err != nil {
 		logger.InitLog.Fatalln("HTTP server setup failed:", err)
 	}
+
+	go func() {
+		ticker := time.NewTicker(10 * time.Minute)
+		for {
+			<-ticker.C
+			pdusession.Mutex.Lock()
+			pdusession.Rate = float64(pdusession.RequestCount) / 10.0
+
+			fmt.Printf("Rate: %.8f [1/min]", pdusession.Rate)
+
+			//n := 2                              // Get required number of UPFs for given rate
+			//upfs := smf_context.GetActiveUPFs() // upfs
+			//
+			//if n > len(upfs) {
+			//	// Call API for deployment creation
+			//} else if n < len(upfs) {
+			//	upf := smf_context.GetLeastLoadedUPF()
+			//	upf.UPF.IsActive = false
+			//}
+
+			pdusession.RequestCount = 0
+			pdusession.Mutex.Unlock()
+		}
+	}()
 }
 
 func (a *SmfApp) Terminate() {

@@ -57,6 +57,7 @@ func (t *UPTunnel) UpdateANInformation(ip net.IP, teid uint32) {
 }
 
 type UPFStatus int
+type K8sStatus bool
 
 const (
 	NotAssociated          UPFStatus = 0
@@ -71,6 +72,7 @@ type UPF struct {
 	UPIPInfo          pfcpType.UserPlaneIPResourceInformation
 	UPFStatus         UPFStatus
 	RecoveryTimeStamp time.Time
+	IsActive          K8sStatus
 
 	Ctx        context.Context
 	CancelFunc context.CancelFunc
@@ -248,6 +250,8 @@ func NewUPF(nodeID *pfcpType.NodeID, ifaces []*factory.InterfaceUpfInfoItem) (up
 
 	upf.N3Interfaces = make([]*UPFInterfaceInfo, 0)
 	upf.N9Interfaces = make([]*UPFInterfaceInfo, 0)
+
+	upf.IsActive = true
 
 	for _, iface := range ifaces {
 		upIface := NewUPFInterfaceInfo(iface)

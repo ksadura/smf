@@ -50,7 +50,7 @@ func AddService(engine *gin.Engine) *gin.RouterGroup {
 		case "GET":
 			group.GET(route.Pattern, route.HandlerFunc)
 		case "POST":
-			group.POST(route.Pattern, route.HandlerFunc)
+			group.POST(route.Pattern, CalcRateMiddleware(), route.HandlerFunc)
 		case "PUT":
 			group.PUT(route.Pattern, route.HandlerFunc)
 		case "DELETE":

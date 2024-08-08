@@ -6,6 +6,8 @@ import (
 	"errors"
 	"net"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/antihax/optional"
 
@@ -112,6 +114,9 @@ func HandlePDUSessionSMContextCreate(request models.PostSmContextsRequest) *http
 		if len(sessSubData) > 0 {
 			smContext.Log.Infof("UDM DATA: %+v", sessSubData[0].DnnConfigurations[smContext.Dnn].SessionAmbr)
 			smContext.DnnConfiguration = sessSubData[0].DnnConfigurations[smContext.Dnn]
+			ambr := strings.Split(sessSubData[0].DnnConfigurations[smContext.Dnn].SessionAmbr.Downlink, " ")
+			bitrate, _ := strconv.Atoi(ambr[0])
+			smContext.GBR = uint64(bitrate)
 			// UP Security info present in session management subscription data
 			if smContext.DnnConfiguration.UpSecurity != nil {
 				smContext.UpSecurity = smContext.DnnConfiguration.UpSecurity
