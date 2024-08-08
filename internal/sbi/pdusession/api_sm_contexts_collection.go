@@ -30,10 +30,13 @@ func HTTPPostSmContexts(c *gin.Context) {
 	request.JsonData = new(models.SmContextCreateData)
 
 	s := strings.Split(c.GetHeader("Content-Type"), ";")
+	logger.PduSessLog.Info(s)
 	var err error
 	switch s[0] {
 	case "application/json":
-		err = c.ShouldBindJSON(request.JsonData)
+		// x, _ := io.ReadAll(c.Request.Body)
+		// logger.PduSessLog.Info(string(x))
+		err = c.ShouldBindJSON(&request)
 	case "multipart/related":
 		err = c.ShouldBindWith(&request, openapi.MultipartRelatedBinding{})
 	}
@@ -49,7 +52,8 @@ func HTTPPostSmContexts(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, rsp)
 		return
 	}
-
+	logger.PduSessLog.Infof("%+v", *request.JsonData)
+	logger.PduSessLog.Info(request.JsonData.ServingNetwork.Mcc)
 	req := httpwrapper.NewRequest(c.Request, request)
 	HTTPResponse := producer.HandlePDUSessionSMContextCreate(req.Body.(models.PostSmContextsRequest))
 	// Http Response to AMF
